@@ -911,9 +911,9 @@
     suppressMessages(library(foreach))
     suppressMessages(library(doParallel))
     # Number of cores of the computer but one
-    no_cores <- detectCores() - 2
+    # no_cores <- detectCores() - 2
     # Register the number of cores
-    registerDoParallel(no_cores)
+    registerDoParallel(1)
 
 
 
