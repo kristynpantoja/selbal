@@ -19,7 +19,8 @@ Imports: compositions,
 	 qdapRegex,
 	 zCompositions,
 	 CMA,
-	 phyloseq
+	 phyloseq,
+	 knitr
 biocViews: 
 RoxygenNote: 6.0.1
 Suggests: knitr,
