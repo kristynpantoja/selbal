@@ -392,6 +392,16 @@
       FINAL.BAL <- sqrt((k1*k2)/(k1+k2))*
         (rowM(logCounts[,POS])- rowM(logCounts[,NEG]))
 
+  #----------------------------------------------------------------------------#
+  # FINAL GLM
+  #----------------------------------------------------------------------------#
+
+    # Auxiliar data.frame for graphical representation
+      U <- data.frame(dat, FINAL.BAL)
+      colnames(U)[ncol(U)] <- "V1"
+    # Regression model
+      FIT.final <- glm(numy~., data=U, family = f.class)
+
   # Draw the plot if draw == T
   if (draw){
   #----------------------------------------------------------------------------#
@@ -464,12 +474,6 @@
     # SECOND: The representation of the plots
     #-----------------------------------------#
 
-    # Auxiliar data.frame for graphical representation
-      U <- data.frame(dat, FINAL.BAL)
-      colnames(U)[ncol(U)] <- "V1"
-    # Regression model
-      FIT.final <- glm(numy~., data=U, family = f.class)
-
     # The plot depending of the class of the response variable
       if (classy=="factor"){
 
@@ -511,17 +515,17 @@
           theme(legend.position = "none")
 
       # ROC - curve
-        library(pROC)
+       suppressMessages(library(pROC))
       # Build ROC curve
-        A<-roc(response = U$numy,predictor = FIT.final$fitted.values)
+        A<-roc(response = U$numy,predictor = FIT.final$fitted.values, quiet = TRUE)
       # Extract the sensitivity and specificiti values
         ROC.TAB <- data.frame(x=1-A$specificities, y=A$sensitivities)
       # Order them for a correct representation
         ROC.TAB <- ROC.TAB[order(ROC.TAB$y),]
       # AUC value
         #auc.val <- round(logit.cor(FIT.final,y = U$numy, covar = covar, logit.acc = logit.acc),3)
-        #auc.val<-round(as.numeric(auc(y, FIT.final$fitted.values)),3)   # diferencies
-        auc.val<-round(as.numeric(auc(U$numy, FIT.final$fitted.values)),3)   # new diferencies
+        #auc.val<-round(as.numeric(auc(y, FIT.final$fitted.values, quiet=TRUE)),3)   # diferencies
+        auc.val<-round(as.numeric(auc(U$numy, FIT.final$fitted.values, quiet=TRUE)),3)   # new diferencies
       # The plot
         ROC.plot <- ggplot(data=ROC.TAB, aes(x=x, y=y)) +
                     geom_line() +
@@ -539,7 +543,7 @@
         FINAL.P <- arrangeGrob(Imp.table, ROC.plot, BoxP, ydensity,
                                ncol=2, nrow=2, widths=c(5,1.25), heights=c(2, 5),
                                vp=viewport(width=0.8, height=0.8))
-        
+
         library(gtable)
         g1 <- ggplotGrob(Imp.table2)
         g2 <- ggplotGrob(BoxP2)
@@ -548,7 +552,7 @@
         g <- rbind(g, g3, size = "first")
         g$widths <- unit.pmax(g1$widths,g2$widths)
         FINAL.P2 <- g
-      
+
       } else {
 
         # Fit the regression model
@@ -594,17 +598,17 @@
         EVOL[,3]<-round(as.numeric(EVOL[,3]),5)
         EVOL[,4]<-round(as.numeric(EVOL[,4]),5)
     		if (draw== TRUE){
-    		  L <- list(FINAL.BAL, POS, NEG, INC.VAR, ACC.Bal, EVOL, global.plot=FINAL.P,
-                      FIT.final,global.plot2 = FINAL.P2, ROC.plot = ROC.plot)
+    		  L <- list(balance.values=FINAL.BAL, numerator=POS, denominator=NEG, balance=INC.VAR, accuracy=ACC.Bal, balance.selection=EVOL, global.plot=FINAL.P,
+                      glm=FIT.final, global.plot2 = FINAL.P2, ROC.plot = ROC.plot)
     		} else {
-    			L <- list(FINAL.BAL, POS, NEG, INC.VAR, ACC.Bal, EVOL)
+    			L <- list(balance.values=FINAL.BAL, numerator=POS, denominator=NEG, balance=INC.VAR, accuracy=ACC.Bal, balance.selection=EVOL, glm=FIT.final)
        	}
     } else {
     		if (draw== TRUE){
-    			L <- list(FINAL.BAL, POS, NEG, INC.VAR, ACC.Bal, global.plot=FINAL.P,
-                      FIT.final,global.plot2 = FINAL.P, ROC.plot = ROC.plot)
+    			L <- list(balance.values=FINAL.BAL, numerator=POS, denominator=NEG, balance=INC.VAR, accuracy=ACC.Bal, global.plot=FINAL.P,
+                      glm=FIT.final,global.plot2 = FINAL.P, ROC.plot = ROC.plot)
     		} else {
-    			L <- list(FINAL.BAL, POS, NEG, INC.VAR, ACC.Bal)
+    			L <- list(balance.values=FINAL.BAL, numerator=POS, denominator=NEG, balance=INC.VAR, accuracy=ACC.Bal, glm=FIT.final)
        	}
     }
 
@@ -874,7 +878,7 @@
             if (logit.acc == "AUC"){
               # Load library
                 library(pROC)
-                ACC <- apply(pred, 2, function(x) auc(y,x))
+                ACC <- apply(pred, 2, function(x) auc(y,x, quiet=TRUE))
             } else if(logit.acc == "Rsq"){
                 ACC <- apply(pred, 2, function(x) cor (y, x)^2)
             } else if (logit.acc == "Tjur"){
@@ -913,7 +917,7 @@
     # Number of cores of the computer but one
     # no_cores <- detectCores() - 2
     # Register the number of cores
-    registerDoParallel(1)
+    registerDoParallel(1) # registerDoParallel(no_cores)
 
 
 
@@ -1937,16 +1941,16 @@
       # ROC - curve
         library(pROC)
       # Build ROC curve
-        A<-roc(response = U$numy,predictor = FIT.final$fitted.values)
+        A<-roc(response = U$numy,predictor = FIT.final$fitted.values, quiet = TRUE)
       # Extract the sensitivity and specificity value
         ROC.TAB <- data.frame(x=1-A$specificities, y=A$sensitivities)
       # Order them for a correct representation
         ROC.TAB <- ROC.TAB[order(ROC.TAB$y),]
       # AUC value
         #auc.val <- round(logit.cor(FIT.final,y = U$numy, logit.acc = logit.acc),3)
-        #auc.val<-round(as.numeric(auc(y, FIT.final$fitted.values)),3)  #diferencies
+        #auc.val<-round(as.numeric(auc(y, FIT.final$fitted.values, quiet=TRUE)),3)  #diferencies
         if (class(y) == "factor") {numy<-as.numeric(y)-1} else {numy<-y} #new diferences
-        auc.val<-round(as.numeric(auc(numy, FIT.final$fitted.values)),3)  #new diferencies
+        auc.val<-round(as.numeric(auc(numy, FIT.final$fitted.values, quiet=TRUE)),3)  #new diferencies
       # The plot
         ROC.plot <- ggplot(data=ROC.TAB, aes(x=x, y=y)) +
           geom_line() +
@@ -1973,8 +1977,8 @@
         g <- rbind(g, g3, size = "first")
         g$widths <- unit.pmax(g1$widths,g2$widths)
         FINAL.P2 <- g
-        
-        
+
+
         # Build a list with the elements of interest
         L <- list(Global.plot = FINAL.P,Global.plot2 = FINAL.P2, ROC.plot = ROC.plot)
 
@@ -2412,9 +2416,9 @@
   # Define the function logit.cor
   logit.cor <- function(FIT, y, covar = NULL,logit.acc){
     if (logit.acc == "AUC"){
-      #d <- as.numeric(auc(y, FIT$fitted.values)) #
+      #d <- as.numeric(auc(y, FIT$fitted.values, quiet=TRUE)) #
       if (class(y) == "factor") {numy<-as.numeric(y)-1} else {numy<-y} #new diferences
-      d <- as.numeric(auc(numy, FIT$fitted.values)) # new diferences
+      d <- as.numeric(auc(numy, FIT$fitted.values, quiet=TRUE)) # new diferences
     } else if (logit.acc == "Rsq"){
       d <- cor(as.numeric(y), FIT$fitted.values)^2
     } else if (logit.acc == "Tjur"){
