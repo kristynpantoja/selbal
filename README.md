@@ -23,7 +23,9 @@ To start using `selbal` we recomend to:
   use.
 - Read the associated vignette (see  https://htmlpreview.github.io/?https://github.com/malucalle/selbal/blob/master/vignettes/vignette.html).
 
+## Changes in this fork
 
+Disabled automatic parallelization to make parallelized simulations easier to run
 
 
 
